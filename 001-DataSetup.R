@@ -46,8 +46,9 @@ d_joined <- d_VSOA %>%
                                    ifelse(is.na(concreteness_perry),concreteness_brysbaert,
                                           ifelse(is.na(concreteness_brysbaert),concreteness_perry,NA)))) %>%
   mutate(across(.cols = c(imageability_rating,average_iconicity_written, concreteness_all, concreteness_perry, concreteness_brysbaert),
-                .fns = ~mean(.x, na.rm = T)-.x,
-                .names = "{.col}_centered"))
+                .fns = ~.x - mean(.x, na.rm = T),
+                .names = "{.col}_centered")) %>%
+  mutate(vsoa = ifelse(vsoa < 0, 0 , vsoa))
 
 
 saveRDS(d_joined, file = paste0("data/VSOA_Conc_Icon_Image_",Sys.Date(),".rds"))
