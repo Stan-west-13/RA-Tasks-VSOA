@@ -23,13 +23,13 @@ d_meta <- ezra_imag %>%
          )
 
 ## Concreteness table
-conc_meta <- iconicity %>%
+conc_meta <- iconicity_conc %>%
   select(word, concreteness_perry = concreteness) %>%
   unique() %>%
   full_join(select(concrete, word = Word, concreteness_brysbaert = Conc.M))
 
 ## Iconicity table
-icon_meta <- iconicity %>%
+icon_meta <- iconicity_conc %>%
   filter(task == "written") %>%
   group_by(word) %>%
   summarize(average_iconicity_written = mean(rating)) %>%
@@ -37,14 +37,17 @@ icon_meta <- iconicity %>%
   arrange(word)
 
 ## Join with JCPP VSOA data
-d_joined <- d %>%
+d_joined <- d_VSOA %>%
   left_join(select(d_meta, num_item_id,lexical_class,aoa_produces, CHILDES_Freq, imageability_rating)) %>%
   unique() %>%
   left_join(icon_meta) %>%
   left_join(conc_meta) %>%
   mutate(concreteness_all = ifelse(!is.na(concreteness_perry) & !is.na(concreteness_brysbaert), concreteness_brysbaert,
                                    ifelse(is.na(concreteness_perry),concreteness_brysbaert,
-                                          ifelse(is.na(concreteness_brysbaert),concreteness_perry,NA))))
+                                          ifelse(is.na(concreteness_brysbaert),concreteness_perry,NA)))) %>%
+  mutate(across(.cols = c(imageability_rating,average_iconicity_written, concreteness_all, concreteness_perry, concreteness_brysbaert),
+                .fns = ~mean(.x, na.rm = T)-.x,
+                .names = "{.col}_centered"))
 
 
 saveRDS(d_joined, file = paste0("data/VSOA_Conc_Icon_Image_",Sys.Date(),".rds"))
