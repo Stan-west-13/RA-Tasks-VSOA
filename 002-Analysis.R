@@ -1,6 +1,7 @@
 library(tidyverse)
 library(lme4)
 library(lmerTest)
+library(emmeans)
 library(ggplot2)
 source("R/Load_Helpers.R")
 
@@ -27,7 +28,10 @@ d_plot <- d %>%
   pivot_longer(cols = ends_with("centered"),
                names_to = "measure",
                values_to = "value")
-
+em <- emmeans(m,specs = c("group",
+                 "imageability_rating_centered",
+                 "concreteness_all_centered",
+                 "average_iconicity_written_centered"))
 
 ggplot(d_plot %>% filter(!group == "ASD-NA",
                          !measure %in% c("concreteness_perry_centered",
