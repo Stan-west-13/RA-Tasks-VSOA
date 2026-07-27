@@ -7,7 +7,7 @@ d_VSOA <- read_rds("data/vsoa-autistic-nonautistic-ndar-id-fix-remodel-v2.rds")
 ezra_imag <- readxl::read_xlsx("data/Imageability_VSOA_SRCLD_may_analyses.xlsx")
 iconicity_conc <- read.csv("data/pone.0137147.s001.csv")
 concrete <- readxl::read_xlsx("data/13428_2013_403_MOESM1_ESM.xlsx")
-
+iconicity_new <- read.csv("data/iconicity_ratings_cleaned.csv")
 ## Select relevant columms from Ezra table
 d_meta <- ezra_imag %>%
   select(num_item_id = `num_item_id...1`,
@@ -32,9 +32,13 @@ conc_meta <- iconicity_conc %>%
 icon_meta <- iconicity_conc %>%
   filter(task == "written") %>%
   group_by(word) %>%
-  summarize(average_iconicity_written = mean(rating)) %>%
-  select(word, average_iconicity_written) %>%
-  arrange(word)
+  summarize(average_iconicity = mean(rating)) %>%
+  select(word, average_iconicity) %>%
+  rbind(select(iconicity_new, word, average_iconicity = rating)) %>%
+  mutate(word = tolower(word)) %>%
+  arrange(word) %>%
+  unique() %>%
+  filter(!duplicated(word))
 
 ## Join with JCPP VSOA data
 d_joined <- d_VSOA %>%
@@ -45,7 +49,7 @@ d_joined <- d_VSOA %>%
   mutate(concreteness_all = ifelse(!is.na(concreteness_perry) & !is.na(concreteness_brysbaert), concreteness_brysbaert,
                                    ifelse(is.na(concreteness_perry),concreteness_brysbaert,
                                           ifelse(is.na(concreteness_brysbaert),concreteness_perry,NA)))) %>%
-  mutate(across(.cols = c(imageability_rating,average_iconicity_written, concreteness_all, concreteness_perry, concreteness_brysbaert),
+  mutate(across(.cols = c(imageability_rating, average_iconicity, concreteness_all, concreteness_perry, concreteness_brysbaert),
                 .fns = ~.x - mean(.x, na.rm = T),
                 .names = "{.col}_centered")) %>%
   mutate(vsoa = ifelse(vsoa < 0, 0 , vsoa))
