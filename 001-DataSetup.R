@@ -49,6 +49,7 @@ d_joined <- d_VSOA %>%
   mutate(across(.cols = c(imageability_rating, iconicity_rating, concreteness_all, concreteness_perry, concreteness_brysbaert),
                 .fns = ~.x - mean(.x, na.rm = T),
                 .names = "{.col}_centered")) %>%
-  mutate(vsoa = ifelse(vsoa < 0, 0 , vsoa))
+  mutate(vsoa_adjusted = ifelse(vsoa < 0, 0 , 
+                                ifelse(vsoa > 680, 680, vsoa)), .after = vsoa)
 
 saveRDS(d_joined, file = paste0("data/VSOA_Conc_Icon_Image_",Sys.Date(),".rds"))
